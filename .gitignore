@@ -1,5 +1,57 @@
+# Virtual environments
 .venv/
+venv/
+env/
+ENV/
+
+# Python bytecode & cache
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter & IPython
 .ipynb_checkpoints/
-*.pyc
+*-checkpoint.ipynb
+*-copy.ipynb
+
+# Editor & OS metadata
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# LaTeX auxiliary build files
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.bbl
+*.blg
+*.out
+*.toc
+*.pdf.baseline
+
+# Temporary inspection & visual regression files
+tmp/
+
+# Packaged archives & raw duplicates
+*.zip
+*.tar.gz
+*.tgz
+airfoil_self_noise.dat
+
+# Cross-platform symlink duplicate
+comparison
+
+# External reference paper PDFs (copyright protection; analyses kept in markdown)
+comparisons/papers/**/*.pdf
+comparisons/papers/reference_01_peters/paper

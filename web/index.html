@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XAI with ANM: Causal Discovery & Attribution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4">
+  <style id="pipeline-layout-styles">
+    /* Core 4x2 Serpentine Pipeline Styles */
+    .pipeline-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 100%;
+    }
+    .pipeline-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr);
+      align-items: stretch;
+      width: 100%;
+    }
+    .pipeline-step {
+      min-width: 0;
+      width: auto;
+      min-height: 108px;
+      max-height: 120px;
+      height: 114px;
+      padding: 0.9rem 1rem;
+      box-sizing: border-box;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+    }
+    .pipeline-step:hover {
+      border-color: var(--accent-blue);
+      background: rgba(30, 41, 59, 0.6);
+    }
+    .pipeline-step.highlight-step {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.08);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.1);
+    }
+    .pipeline-step-description {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      line-height: 1.4;
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: normal;
+      min-width: 0;
+    }
+    .pipeline-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 1.15rem;
+      font-weight: 700;
+      user-select: none;
+      line-height: 1;
+    }
+    .pipeline-transition-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr);
+      height: 26px;
+      align-items: center;
+      width: 100%;
+    }
+    .pipeline-transition {
+      grid-column: 7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-blue);
+      font-size: 1.2rem;
+      font-weight: 700;
+      user-select: none;
+    }
+    @media (max-width: 980px) and (min-width: 581px) {
+      .pipeline-wrapper { gap: 0.85rem; }
+      .pipeline-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+      }
+      .pipeline-arrow, .pipeline-transition-row { display: none; }
+      .pipeline-step { height: auto; min-height: 105px; }
+      .step-5 { order: 1; }
+      .step-6 { order: 2; }
+      .step-7 { order: 3; }
+      .step-8 { order: 4; }
+    }
+    @media (max-width: 580px) {
+      .pipeline-wrapper, .pipeline-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .pipeline-arrow, .pipeline-transition-row { display: none; }
+      .pipeline-step { width: 100%; height: auto; min-height: 95px; }
+      .step-5 { order: 1; }
+      .step-6 { order: 2; }
+      .step-7 { order: 3; }
+      .step-8 { order: 4; }
+      .pipeline-step:not(.step-8)::after {
+        content: "↓";
+        display: block;
+        text-align: center;
+        color: var(--accent-blue);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-top: 0.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-container">
+    <!-- Header Section -->
+    <header class="paper-header">
+      <div class="header-badge">AML Research Demonstration</div>
+      <h1 class="main-title">XAI with ANM</h1>
+      <h2 class="sub-title">Explainable AI using Causal Discovery and Additive Noise Models</h2>
+      <p class="description">
+        A demonstration of how causal discovery using Additive Noise Models can provide causal structure for explaining
+        machine-learning predictions.
+      </p>
+    </header>
+
+    <!-- Methodology Flow -->
+    <section class="section-card methodology-section">
+      <div class="section-title-wrap">
+        <h3 class="section-title">Research Pipeline</h3>
+        <span class="section-tag">END-TO-END WORKFLOW</span>
+      </div>
+
+      <div class="pipeline-wrapper">
+        <!-- Row 1: Steps 1 to 4 -->
+        <div class="pipeline-row">
+          <div class="pipeline-step step-1">
+            <div class="step-header">
+              <span class="step-num">1</span>
+              <span class="step-label">Dataset</span>
+            </div>
+            <div class="pipeline-step-description">178 Samples • 13 Features</div>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">→</div>
+
+          <div class="pipeline-step step-2">
+            <div class="step-header">
+              <span class="step-num">2</span>
+              <span class="step-label">Preprocessing</span>
+            </div>
+            <div class="pipeline-step-description">Standardization (μ = 0, σ = 1)</div>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">→</div>
+
+          <div class="pipeline-step step-3">
+            <div class="step-header">
+              <span class="step-num">3</span>
+              <span class="step-label">ANM Regression</span>
+            </div>
+            <div class="pipeline-step-description">5-Fold GP Cross-Fitting</div>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">→</div>
+
+          <div class="pipeline-step step-4">
+            <div class="step-header">
+              <span class="step-num">4</span>
+              <span class="step-label">HSIC Test</span>
+            </div>
+            <div class="pipeline-step-description">Residual Independence</div>
+          </div>
+        </div>
+
+        <!-- Serpentine Transition Arrow: Step 4 down to Step 5 -->
+        <div class="pipeline-transition-row" aria-hidden="true">
+          <div class="pipeline-transition">↓</div>
+        </div>
+
+        <!-- Row 2: Steps 8 to 5 (flowing right to left: 8 ← 7 ← 6 ← 5) -->
+        <div class="pipeline-row">
+          <div class="pipeline-step highlight-step step-8">
+            <div class="step-header">
+              <span class="step-num">8</span>
+              <span class="step-label">Causal Attribution</span>
+            </div>
+            <div class="pipeline-step-description">Interventions • 95% CI</div>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">←</div>
+
+          <div class="pipeline-step step-7">
+            <div class="step-header">
+              <span class="step-num">7</span>
+              <span class="step-label">DAG Construction</span>
+            </div>
+            <div class="pipeline-step-description">Cycle Pruning • Topological Order</div>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">←</div>
+
+          <div class="pipeline-step step-6">
+            <div class="step-header">
+              <span class="step-num">6</span>
+              <span class="step-label">Thresholding</span>
+            </div>
+            <div class="pipeline-step-description">75th Percentile Cutoff (τ)</div>
+          </div>
+
+          <div class="pipeline-arrow" aria-hidden="true">←</div>
+
+          <div class="pipeline-step step-5">
+            <div class="step-header">
+              <span class="step-num">5</span>
+              <span class="step-label">Direction Selection</span>
+            </div>
+            <div class="pipeline-step-description">Compare Residual Dependence</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dataset Selection & Run Controls -->
+    <section class="section-card dataset-section">
+      <div class="dataset-card-grid">
+        <div class="dataset-meta">
+          <div class="dataset-heading-row">
+            <span class="active-dot"></span>
+            <h3 class="dataset-name" id="datasetName">Wine Dataset (UCI)</h3>
+            <span class="status-pill">Validated Experimental Setup</span>
+          </div>
+          <div class="dataset-specs">
+            <div class="spec-item">
+              <span class="spec-label">Samples:</span>
+              <span class="spec-val" id="metaSamples">178</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Features:</span>
+              <span class="spec-val" id="metaFeatures">13</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Possible Pairs:</span>
+              <span class="spec-val" id="metaPairs">78</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Predictive Model:</span>
+              <span class="spec-val" id="metaModel">Logistic Regression (model.pkl)</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Attribution Target:</span>
+              <span class="spec-val" id="metaTarget">P(class 0) for Observation #0</span>
+            </div>
+          </div>
+        </div>
+        <div class="run-action-wrap">
+          <button id="runBtn" class="btn-primary">
+            <span class="btn-icon">▶</span>
+            <span class="btn-text">Run Analysis</span>
+          </button>
+          <div class="run-note">Executes the verified Python ANM discovery & CAI pipeline</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <div class="loading-title">Executing Causal Pipeline...</div>
+      <div class="loading-desc">Evaluating 78 pairs via 5-fold cross-fitted GP regression, computing HSIC residuals,
+        pruning cycles, and sampling 1000 Monte Carlo interventions.</div>
+    </div>
+
+    <!-- Error Banner -->
+    <div id="errorBanner" class="error-banner hidden">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message" id="errorMessage">An error occurred while running analysis.</div>
+    </div>
+
+    <!-- Results Section (Visible after execution) -->
+    <div id="resultsSection" class="results-container hidden">
+
+      <!-- 1. Analysis Overview Cards -->
+      <section class="overview-section">
+        <h3 class="section-title">1. Analysis Overview</h3>
+        <div class="cards-grid">
+          <div class="metric-card">
+            <div class="metric-label">Samples</div>
+            <div class="metric-value" id="resSamples">178</div>
+            <div class="metric-footnote">UCI Wine chemical observations</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Features</div>
+            <div class="metric-value" id="resFeatures">13</div>
+            <div class="metric-footnote">Continuous numeric variables</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Pairs Evaluated</div>
+            <div class="metric-value" id="resPairs">78</div>
+            <div class="metric-footnote">13 × 12 / 2 bivariate tests</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Candidate Edges</div>
+            <div class="metric-value highlight-val" id="resCandidateEdges">20</div>
+            <div class="metric-footnote">Retained at 75th percentile</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Threshold τ</div>
+            <div class="metric-value font-mono" id="resThreshold">0.002919</div>
+            <div class="metric-footnote">75th percentile confidence cutoff</div>
+          </div>
+          <div class="metric-card status-card">
+            <div class="metric-label">DAG Status</div>
+            <div class="metric-value status-success" id="resDagStatus">Acyclic</div>
+            <div class="metric-footnote" id="resCycles">Cycles Removed: 0 (Naturally acyclic)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Discovered Causal Graph -->
+      <section class="section-card graph-section">
+        <div class="section-header-split">
+          <div>
+            <h3 class="section-title">2. Discovered Causal Graph (DAG)</h3>
+            <p class="section-subtitle">
+              Nodes represent wine chemical features. Directed edges represent causal directions inferred by the ANM-based discovery procedure.
+            </p>
+          </div>
+          <div class="graph-legend">
+            <span class="legend-item"><span class="legend-color role-root"></span> Root</span>
+            <span class="legend-item"><span class="legend-color role-mediator"></span> Mediator</span>
+            <span class="legend-item"><span class="legend-color role-sink"></span> Sink</span>
+            <span class="legend-item"><span class="legend-color role-isolated"></span> Isolated</span>
+          </div>
+        </div>
+
+        <div class="graph-workspace">
+          <div class="graph-canvas-container" id="graphContainer">
+            <svg id="causalGraphSvg" class="graph-svg" viewBox="0 0 1000 600">
+              <defs>
+                <marker id="arrowhead" markerWidth="9" markerHeight="9" refX="23" refY="4.5" orient="auto">
+                  <polygon points="0 1, 8 4.5, 0 8" fill="#60a5fa" />
+                </marker>
+                <marker id="arrowhead-highlight" markerWidth="11" markerHeight="11" refX="24" refY="5" orient="auto">
+                  <polygon points="0 1, 9 5, 0 9" fill="#38bdf8" />
+                </marker>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <g id="graphZoomGroup">
+                <g id="edgeLayer"></g>
+                <g id="nodeLayer"></g>
+              </g>
+            </svg>
+
+            <!-- Graph Controls Overlay -->
+            <div class="graph-controls">
+              <button id="zoomInBtn" class="control-btn" title="Zoom In">+</button>
+              <button id="zoomOutBtn" class="control-btn" title="Zoom Out">−</button>
+              <button id="zoomResetBtn" class="control-btn" title="Reset View">⟲</button>
+            </div>
+
+            <!-- Topological Order Drawer -->
+            <div class="topo-summary-bar">
+              <span class="topo-label">Topological Order:</span>
+              <span class="topo-sequence font-mono" id="topoSequence">-</span>
+            </div>
+          </div>
+
+          <!-- Edge / Node Inspector Sidebar -->
+          <div class="inspector-card" id="inspectorCard">
+            <div class="inspector-header">
+              <span class="inspector-badge" id="inspectorType">Graph Inspector</span>
+              <h4 class="inspector-title" id="inspectorTitle">Select an edge or node</h4>
+            </div>
+            <div class="inspector-body" id="inspectorBody">
+              <p class="inspector-hint">Click any directed edge arrow to inspect its forward and reverse HSIC
+                independence scores, confidence margin Δ, and directional evidence.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Causal Attribution (CAI) -->
+      <section class="section-card cai-section">
+        <div class="section-header-split">
+          <div>
+            <h3 class="section-title">3. Causal Feature Attribution (CAI)</h3>
+            <p class="section-subtitle">
+              Local interventional causal attribution:
+              <span class="math-expr">CAI_j = E[f(X) | do(X_j = x_j)] - E[f(X)]</span>
+              for Observation Index 0.
+            </p>
+          </div>
+          <div class="baseline-badge">
+            <span class="baseline-label">Observational Baseline</span>
+            <span class="baseline-val font-mono" id="caiBaseline">E[f(X)] = 0.311357</span>
+          </div>
+        </div>
+
+        <div class="cai-chart-wrapper">
+          <div class="cai-chart-meta">
+            <div class="ci-note">
+              <span class="ci-legend-dot sig"></span> Statistically Significant (95% CI excludes zero)
+              <span class="ci-legend-dot non-sig" style="margin-left: 1rem;"></span> Uncertain / Inconclusive (95% CI
+              crosses zero)
+            </div>
+            <div class="mc-note">K = 1,000 Monte Carlo samples</div>
+          </div>
+
+          <!-- Horizontal Bar Chart Container -->
+          <div class="cai-bars-container" id="caiBarsContainer">
+            <!-- Dynamically populated via app.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. ANM Pairwise Results Table -->
+      <section class="section-card table-section">
+        <div class="table-header-row">
+          <div>
+            <h3 class="section-title">4. Pairwise ANM Results (All 78 Pairs)</h3>
+            <p class="section-subtitle">
+              Evaluated bivariate cause-effect directions with 5-fold cross-fitting GP residuals and HSIC scores.
+            </p>
+          </div>
+          <div class="table-filters">
+            <input type="text" id="tableSearchInput" class="table-search"
+              placeholder="Filter by feature name (e.g. proline)...">
+            <div class="filter-pills">
+              <button class="pill-btn active" data-filter="all">All (78)</button>
+              <button class="pill-btn" data-filter="retained">Retained in DAG (20)</button>
+              <button class="pill-btn" data-filter="filtered">Filtered (<75th %)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="pairwiseTable">
+            <thead>
+              <tr>
+                <th data-sort="pair_index" class="th-num">#</th>
+                <th data-sort="cause">Inferred Cause</th>
+                <th data-sort="effect">Inferred Effect</th>
+                <th data-sort="direction">Selected Direction</th>
+                <th data-sort="forward_hsic" class="th-num">Forward HSIC</th>
+                <th data-sort="reverse_hsic" class="th-num">Reverse HSIC</th>
+                <th data-sort="confidence" class="th-num">Confidence Δ</th>
+                <th data-sort="status" class="th-center">DAG Status</th>
+              </tr>
+            </thead>
+            <tbody id="pairwiseTableBody">
+              <!-- Dynamically populated via app.js -->
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer-summary" id="tableSummaryText">Showing 78 pairs</div>
+      </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="paper-footer">
+      <div class="footer-content">
+        <p>Advanced Machine Learning (AML) Final Year Project &bull; Additive Noise Model (ANM) Causal Discovery &
+          Causal Attribution</p>
+        <p class="footer-note">Backend implementation executes verified Python modules <code>anm_pairwise.py</code>,
+          <code>generate_benchmark.py</code>, and <code>cai.py</code> deterministically.</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
